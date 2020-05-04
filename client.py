@@ -75,10 +75,12 @@ while True:
         print('get config from server failed')
     update_flag = True if res.json().get('update_flag') else False
     if update_flag:
+        tmp = sys.executable
+        tmp1 = sys.argv[1:]
         subprocess.call("git fetch origin")
         subprocess.call("git pull origin")
-        os.execv(sys.executable,
-                 [sys.executable, os.path.join(sys.path[0], __file__)] + sys.argv[1:])
+        os.execv(tmp,
+                 [tmp, os.path.join(sys.path[0], __file__)] + tmp1)
     if new_id != None:
         if update_flag:
             res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'update':'finish'})
