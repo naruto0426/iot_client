@@ -81,7 +81,8 @@ while True:
         subprocess.call("git pull origin")
     if new_id != None:
         if update_flag:
-            res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'update':'finish'})
+            git_head = re.sub("b'|\\\\n'",'',str(subprocess.check_output(['git','rev-parse','HEAD'])))
+            res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'update':'finish','git_head': git_head})
         else:
             res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id})
         if update_flag:
