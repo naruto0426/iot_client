@@ -79,13 +79,13 @@ while True:
         tmp1 = sys.argv[1:]
         subprocess.call("git fetch origin")
         subprocess.call("git pull origin")
-        os.execv(tmp,
-                 [tmp, os.path.join(sys.path[0], __file__)] + tmp1)
     if new_id != None:
         if update_flag:
             res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'update':'finish'})
         else:
             res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id})
+        if update_flag:
+            os.execv(tmp,[tmp, os.path.join(sys.path[0], __file__)] + tmp1)
         print('Announcement:'+res.content.decode('UTF-8'))
         print('config_txt:',config['print_txt'])
         if my_data['system'] == 'Linux':
