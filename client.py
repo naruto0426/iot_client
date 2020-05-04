@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
+import yaml
 import requests
 import platform as pf
 import base64
 import json
 import subprocess
-import os
+import os,sys
 import time
 import psutil
+import subprocess
+
+
 my_data = dict(pf.uname()._asdict())
 if os.name == 'nt':
     import wmi
+
 """
 system = Windows
 node = DESKTOP-N5U9EN8
@@ -21,6 +26,8 @@ processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
 while True:
+    with open(r'config.yml') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
     uid_file_name = 'demo_uid.txt'
     my_data = dict(pf.uname()._asdict())
     time.sleep(2)
@@ -37,7 +44,7 @@ while True:
         f.close()
         #print(ID)
         new_id = ID
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':ID,'sensor_data':sensor_data})
+        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':ID,'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8')})
         try:
             get_id = res.json().get('id')
         except:
@@ -49,7 +56,7 @@ while True:
                 f.write(new_id)
                 f.close()
     else:
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data})
+        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8')})
         f = open(uid_file_name,'w+')
         try:
             new_id = res.json()['id']
@@ -57,9 +64,28 @@ while True:
             new_id = None
         f.write(new_id)
         f.close()
+    try:
+        config_change = res.json().get('config_change')
+        if config_change != None:
+            tmp = json.loads(config_change)
+            config = tmp
+            with open('config.yml', 'w') as outfile:
+                yaml.dump(tmp, outfile, default_flow_style=False)
+    except:
+        print('get config from server failed')
+    update_flag = True if res.json().get('update_flag') else False
+    if update_flag:
+        cmd = "git fetch origin && git checkout origin ."
+        subprocess.call(cmd)
+        os.execv(sys.executable,
+                 [sys.executable, os.path.join(sys.path[0], __file__)] + sys.argv[1:])
     if new_id != None:
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'sensor_data':sensor_data})
+        if update_flag:
+            res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'update':'finish'})
+        else:
+            res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id})
         print('Announcement:'+res.content.decode('UTF-8'))
+        print('config_txt:',config['print_txt'])
         if my_data['system'] == 'Linux':
             f = open(uid_file_name,'r')
             parent_id = f.read()

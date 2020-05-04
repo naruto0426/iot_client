@@ -1,1 +1,5 @@
-"# iot_client" 
+"# iot_client"
+"pip install psutil"
+"#windows only:"
+" #pip install wmi"
+"windows要使用admin權限開啟"
