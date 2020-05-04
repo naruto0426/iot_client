@@ -75,8 +75,8 @@ while True:
         print('get config from server failed')
     update_flag = True if res.json().get('update_flag') else False
     if update_flag:
-        cmd = "git fetch origin && git pull origin"
-        subprocess.call(cmd)
+        subprocess.call("git fetch origin")
+        subprocess.call("git pull origin")
         os.execv(sys.executable,
                  [sys.executable, os.path.join(sys.path[0], __file__)] + sys.argv[1:])
     if new_id != None:
