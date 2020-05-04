@@ -86,7 +86,6 @@ while True:
             res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id})
         if update_flag:
             os.execv(tmp,[tmp, os.path.join(sys.path[0], __file__)] + tmp1)
-        print('123')
         print('Announcement:'+res.content.decode('UTF-8'))
         print('config_txt:',config['print_txt'])
         if my_data['system'] == 'Linux':
