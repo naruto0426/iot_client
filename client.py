@@ -26,8 +26,11 @@ processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
 while True:
-    with open(r'config.yml') as file:
-        config = yaml.load(file, Loader=yaml.FullLoader)
+    try:
+        with open(r'config.yml') as file:
+            config = yaml.load(file, Loader=yaml.FullLoader)
+    except:
+        config = {}
     uid_file_name = 'demo_uid.txt'
     my_data = dict(pf.uname()._asdict())
     time.sleep(2)
@@ -87,9 +90,8 @@ while True:
             res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id})
         if update_flag:
             os.execv(tmp,[tmp, os.path.join(sys.path[0], __file__)] + tmp1)
-        print('xxx')
         print('Announcement:'+res.content.decode('UTF-8'))
-        print('config_txt:',config['print_txt'])
+        print('config_txt:',config.get('print_txt'))
         if my_data['system'] == 'Linux':
             f = open(uid_file_name,'r')
             parent_id = f.read()
