@@ -26,7 +26,7 @@ processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
 while True:
-    print ("i am in the iot class")
+    print ("ntu iot 112")
     try:
         with open(r'config.yml') as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
