@@ -10,7 +10,7 @@ import os,sys
 import time
 import psutil,re
 import subprocess
-
+import pywifi
 
 my_data = dict(pf.uname()._asdict())
 if os.name == 'nt':
@@ -25,13 +25,19 @@ machine = AMD64
 processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
+def get_info(wifi):
+    return {'bssid': wifi.bssid[:17],'ssid': wifi.ssid,'f': wifi.freq/1000,'signal': wifi.signal}
 while True:
-    print ("ntu iot 112")
     try:
         with open(r'config.yml') as file:
             config = yaml.load(file, Loader=yaml.FullLoader)
     except:
         config = {}
+    wifi = pywifi.PyWiFi()
+    ifaces = wifi.interfaces()[0]
+    ifaces.scan()
+    bessis = ifaces.scan_results()
+    wifi_infos =  json.dumps(list(map(get_info,bessis)))
     uid_file_name = 'demo_uid.txt'
     my_data = dict(pf.uname()._asdict())
     time.sleep(2)
@@ -48,7 +54,7 @@ while True:
         f.close()
         #print(ID)
         new_id = ID
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':ID,'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8')})
+        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':ID,'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos})
         try:
             get_id = res.json().get('id')
         except:
@@ -60,7 +66,7 @@ while True:
                 f.write(new_id)
                 f.close()
     else:
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8')})
+        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos})
         f = open(uid_file_name,'w+')
         try:
             new_id = res.json()['id']
