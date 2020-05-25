@@ -44,11 +44,14 @@ while True:
     my_data = dict(pf.uname()._asdict())
     time.sleep(2)
     cpu_percent = psutil.cpu_percent()
-    if os.name=='nt':
-        w = wmi.WMI(namespace="root/wmi")
-        cpu_temperature = w.MSAcpi_ThermalZoneTemperature ()[0].CurrentTemperature/10.0-273.15
-    else:
-        cpu_temperature = psutil.sensors_temperatures()['coretemp'][0].current
+    try:
+        if os.name=='nt':
+            w = wmi.WMI(namespace="root/wmi")
+            cpu_temperature = w.MSAcpi_ThermalZoneTemperature ()[0].CurrentTemperature/10.0-273.15
+        else:
+            cpu_temperature = psutil.sensors_temperatures()['coretemp'][0].current
+    except:
+        cpu_temperature = 0
     sensor_data = json.dumps([{'s_type': 'CPU溫度','value':cpu_temperature},{'s_type': 'CPU使用率','value':cpu_percent}]).encode("UTF-8")
     if os.path.isfile(uid_file_name):
         f = open(uid_file_name,'r')
