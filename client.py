@@ -89,8 +89,8 @@ while True:
     if update_flag:
         tmp = sys.executable
         tmp1 = sys.argv[1:]
-        subprocess.call("git fetch origin")
-        subprocess.call("git pull origin")
+        subprocess.call(["git","fetch","origin"])
+        subprocess.call(["git","pull","origin"])
     if new_id != None:
         if update_flag:
             git_head = re.sub("b'|\\\\n'",'',str(subprocess.check_output(['git','rev-parse','HEAD'])))
