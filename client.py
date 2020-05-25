@@ -26,7 +26,9 @@ processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
 def get_info(wifi):
-    return {'bssid': wifi.bssid[:17],'ssid': wifi.ssid,'f': wifi.freq/1000,'signal': wifi.signal}
+    tmp = wifi.freq
+    tmp = tmp/1000 if tmp>10000 else tmp
+    return {'bssid': wifi.bssid[:17],'ssid': wifi.ssid,'f': tmp,'signal': wifi.signal}
 while True:
     try:
         with open(r'config.yml') as file:
