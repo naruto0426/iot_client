@@ -11,6 +11,7 @@ import time
 import psutil,re
 import subprocess
 import pywifi
+import cv2
 
 my_data = dict(pf.uname()._asdict())
 if os.name == 'nt':
@@ -25,6 +26,7 @@ machine = AMD64
 processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
+camera = cv2.VideoCapture(0)
 def get_info(wifi):
     tmp = wifi.freq
     tmp = tmp/1000 if tmp>10000 else tmp
@@ -35,31 +37,50 @@ while True:
             config = yaml.load(file, Loader=yaml.FullLoader)
     except:
         config = {}
-    wifi = pywifi.PyWiFi()
-    ifaces = wifi.interfaces()[0]
-    ifaces.scan()
-    bessis = ifaces.scan_results()
-    wifi_infos =  json.dumps(list(map(get_info,bessis)))
+    if config.get('path_open') != False:
+        ret, frame = camera.read()
+        if ret:
+            shape = frame.shape
+            weight, height = shape[0]//5, shape[1]//5
+            frame = cv2.resize(frame, (height, weight), interpolation=cv2.INTER_CUBIC)
+            frame = frame.tolist()
+    else:
+        frame = None
+    frame = json.dumps(frame)
+    if config.get('pos_open') != False:
+        wifi = pywifi.PyWiFi()
+        ifaces = wifi.interfaces()[0]
+        print(ifaces.name())
+        ifaces.scan()
+        bessis = ifaces.scan_results()
+        wifi_infos =  json.dumps(list(map(get_info,bessis)))
+    else:
+        wifi_infos = json.dumps(None)
+    cord = json.dumps([-10000,-10000,-10000])#[1220,61,55])
+    #print(wifi_infos)
     uid_file_name = 'demo_uid.txt'
     my_data = dict(pf.uname()._asdict())
-    time.sleep(2)
-    cpu_percent = psutil.cpu_percent()
-    try:
+    time.sleep(0.1)
+    if config.get('pic_open') != False:
+        cpu_percent = psutil.cpu_percent()
         if os.name=='nt':
             w = wmi.WMI(namespace="root/wmi")
             cpu_temperature = w.MSAcpi_ThermalZoneTemperature ()[0].CurrentTemperature/10.0-273.15
         else:
-            cpu_temperature = psutil.sensors_temperatures()['coretemp'][0].current
-    except:
-        cpu_temperature = 0
-    sensor_data = json.dumps([{'s_type': 'CPU溫度','value':cpu_temperature},{'s_type': 'CPU使用率','value':cpu_percent}]).encode("UTF-8")
+            try:
+                cpu_temperature = psutil.sensors_temperatures()['coretemp'][0].current
+            except:
+                cpu_temperature = 0
+        sensor_data = json.dumps([{'s_type': 'CPU溫度','value':cpu_temperature},{'s_type': 'CPU使用率','value':cpu_percent}]).encode("UTF-8")
+    else:
+        sensor_data = json.dumps(None)
     if os.path.isfile(uid_file_name):
         f = open(uid_file_name,'r')
         ID = f.read()
         f.close()
         #print(ID)
         new_id = ID
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':ID,'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos})
+        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':ID,'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos,'cord':cord,'frame':frame})
         try:
             get_id = res.json().get('id')
         except:
@@ -71,7 +92,7 @@ while True:
                 f.write(new_id)
                 f.close()
     else:
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos})
+        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos,'cord':cord,'frame':frame})
         f = open(uid_file_name,'w+')
         try:
             new_id = res.json()['id']
@@ -92,8 +113,8 @@ while True:
     if update_flag:
         tmp = sys.executable
         tmp1 = sys.argv[1:]
-        subprocess.call(["git","fetch","origin"])
-        subprocess.call(["git","pull","origin"])
+        subprocess.call("git fetch origin")
+        subprocess.call("git pull origin")
     if new_id != None:
         if update_flag:
             git_head = re.sub("b'|\\\\n'",'',str(subprocess.check_output(['git','rev-parse','HEAD'])))
