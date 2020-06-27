@@ -26,6 +26,7 @@ machine = AMD64
 processor = Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
 """
 uid_file_name = 'demo_uid.txt'
+root_url = 'http://demo56.dev.rulingcom.com:5000'
 camera = cv2.VideoCapture(0)
 def get_info(wifi):
     tmp = wifi.freq
@@ -92,7 +93,7 @@ while True:
                 f.write(new_id)
                 f.close()
     else:
-        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos,'cord':cord,'frame':frame})
+        res = requests.post(f'{root_url}/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'sensor_data':sensor_data,'config':json.dumps(config).encode('UTF-8'),'wifi_infos': wifi_infos,'cord':cord,'frame':frame})
         f = open(uid_file_name,'w+')
         try:
             new_id = res.json()['id']
@@ -118,9 +119,9 @@ while True:
     if new_id != None:
         if update_flag:
             git_head = re.sub("b'|\\\\n'",'',str(subprocess.check_output(['git','rev-parse','HEAD'])))
-            res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id,'update':'finish','git_head': git_head})
+            res = requests.post(f'{root_url}/annc',data = {'id': new_id,'update':'finish','git_head': git_head})
         else:
-            res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/annc',data = {'id': new_id})
+            res = requests.post(f'{root_url}/annc',data = {'id': new_id})
         if update_flag:
             os.execv(tmp,[tmp, os.path.join(sys.path[0], __file__)] + tmp1)
         print('Announcement:'+res.content.decode('UTF-8'))
@@ -146,7 +147,7 @@ while True:
                     for idx,o in enumerate(outputs):
                         info = o.split()
                         my_data = {'node':info[6],'version':info[8],'parent_id': parent_id}
-                        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':IDs[idx]})
+                        res = requests.post(f'{root_url}/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8")),'id':IDs[idx]})
                         if res.json().get('id') != None:
                             new_id = res.json().get('id')
                             new_ids.append(new_id)
@@ -163,7 +164,7 @@ while True:
                     for idx,o in enumerate(outputs):
                         info = o.split()
                         my_data = {'node':info[6],'version':info[8],'parent_id': parent_id}
-                        res = requests.post('http://demo-applejenny.dev.rulingcom.com:5000/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8"))})
+                        res = requests.post(f'{root_url}/client', data = {'data':base64.b64encode(json.dumps(my_data).encode("UTF-8"))})
                         if res.json().get('id') != None:
                             new_id = res.json().get('id')
                             new_ids.append(new_id)
